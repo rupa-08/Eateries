@@ -13,6 +13,6 @@ class ProductAdmin(admin.ModelAdmin):
    search_fields = ['product_name__istartswith']
 
 
-@admin.register(models.CartItem)
-class CartItem(admin.ModelAdmin):
+@admin.register(models.OrderItem)
+class OrderItem(admin.ModelAdmin):
    list_display = ['cart','product','quantity']

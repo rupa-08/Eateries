@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAdminUser, IsAuthenticated
-from .serializers import UserSerializer, ProductSerializers, CartSerializers, CartItemSerializers, SimpleProductSerializer, AddCartItemSerializer, UpdateCartItemSerializer 
+from .serializers import UserSerializer, ProductSerializers, OrderSerializers, OrderItemSerializers, SimpleProductSerializer, AddCartItemSerializer, UpdateCartItemSerializer 
 from .permissions import IsAdminOrReadOnly, ViewCustomerHistoryPermission
-from .models import Product, Cart, CartItem
+from .models import Product, Order, OrderItem
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin,DestroyModelMixin
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from django.contrib.auth.models import User
@@ -53,8 +53,8 @@ class CartViewSet(CreateModelMixin,
                   RetrieveModelMixin,
                   DestroyModelMixin,
                   GenericViewSet):
-   queryset = Cart.objects.prefetch_related('items__product').all()#query set to prefetch all cart item
-   serializer_class = CartSerializers
+   queryset = Order.objects.prefetch_related('items__product').all()#query set to prefetch all cart item
+   serializer_class = OrderSerializers
 
 class CartItemViewSet(ModelViewSet):
    #allow only four hhtp methods
@@ -66,13 +66,13 @@ class CartItemViewSet(ModelViewSet):
          return AddCartItemSerializer #returning AddCartItemSerializer for POST method
       elif self.request.method == 'PATCH':
          return UpdateCartItemSerializer #returning UpdateCartItemSerializer for POST method
-      return CartItemSerializers
+      return OrderItemSerializers
 
    def get_serializer_context(self):
         return {'cart_id': self.kwargs['carts_pk']}
 
    def get_queryset(self):
-        return CartItem.objects \
+        return OrderItem.objects \
             .filter(cart_id=self.kwargs['carts_pk']) \
             .select_related('product')#query to search based on product
 

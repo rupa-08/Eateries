@@ -1,7 +1,7 @@
 #important imports
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Product, Cart, CartItem  
+from .models import Product, Order, OrderItem  
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from django.db import transaction
 
@@ -46,32 +46,32 @@ class SimpleProductSerializer(serializers.ModelSerializer):
    #meta class for Product
    class Meta:
       model = Product
-      fields = ['product_name', 'product_price'] #getting required fields only
+      fields = ['product_name'] #getting required fields only
 
 #cart item serializer
-class CartItemSerializers(serializers.ModelSerializer):
+class OrderItemSerializers(serializers.ModelSerializer):
    product = SimpleProductSerializer()
    total_price = serializers.SerializerMethodField()
 
    #function to get total price of a product
-   def get_total_price(self, cart_item:CartItem):
+   def get_total_price(self, cart_item:OrderItem):
       return cart_item.quantity * cart_item.product.product_price
 
    #meta class for Cart item
    class Meta:
-      model = CartItem
-      fields = ['id','product','quantity','total_price'] #getting required fields only
+      model = OrderItem
+      fields = ['id','product','quantity','payment','total_price'] #getting required fields only
 
 #cart serializer
-class CartSerializers(serializers.ModelSerializer):
+class OrderSerializers(serializers.ModelSerializer):
    id = serializers.UUIDField(read_only=True)
-   items = CartItemSerializers(many=True, read_only=True)
+   items = OrderItemSerializers(many=True, read_only=True)
    totalPrice = serializers.SerializerMethodField()
    #function to get total price all the product in cart
    def get_totalPrice(self, cart):
       return sum([item.quantity * item.product.product_price for item in cart.items.all()])
    class Meta:
-      model = Cart
+      model = Order
       fields = ['id','items','totalPrice']#getting required fields only
 
 #serializer to add product item to cart
@@ -88,26 +88,27 @@ class AddCartItemSerializer(serializers.ModelSerializer):
       cart_id = self.context['cart_id']
       product_id = self.validated_data['product_id']
       quantity = self.validated_data['quantity']
+      payment = ['payment']
       #adding item to cart
       try:
-         cart_item = CartItem.objects.get(cart_id=cart_id, product_id=product_id)
+         cart_item = OrderItem.objects.get(cart_id=cart_id, product_id=product_id)
          cart_item.quantity += quantity
          cart_item.save()#saving cart item
          self.instance = cart_item
          #updating an existing item
-      except CartItem.DoesNotExist:
+      except OrderItem.DoesNotExist:
          #Create a new item
-         self.instance = CartItem.objects.create(cart_id=cart_id, **self.validated_data)
+         self.instance = OrderItem.objects.create(cart_id=cart_id, **self.validated_data)
       return self.instance
       #meta class for CartItem
    class Meta:
-      model = CartItem
-      fields = ['id','product_id','quantity'] #getting required fields only
+      model = OrderItem
+      fields = ['id','product_id','quantity','payment'] #getting required fields only
 
 #serializers to update quantity in cart 
 class UpdateCartItemSerializer(serializers.ModelSerializer):
    #meta class for Update cart item
    class Meta:
-      model = CartItem
-      fields = ['quantity'] #getting required fields only
+      model = OrderItem
+      fields = ['quantity','payment'] #getting required fields only
 

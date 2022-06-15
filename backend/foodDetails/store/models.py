@@ -38,16 +38,38 @@ class Product(models.Model):
         ordering = ['product_name'] # for ordering
 
 #Cart Model
-class Cart(models.Model):
+class Order(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4)
     created_at = models.DateTimeField(auto_now_add=True) #date and time of cart created at
 
-class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')#foreign key
+class OrderItem(models.Model):
+    cart = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')#foreign key
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]#validating cart quantity
     )
+    
+    paid = 'Paid'
+    unpaid = 'Unpaid'
+
+    PAYMENT_CHOICES = [
+       (paid, 'Paid'),
+       (unpaid, 'Unpaid'),
+   ]
+    # payment_status = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    payment = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default=paid)
+    
     class Meta:
         unique_together = [['cart','product']]#unique cart and product
+
+# class Payment(models.Model):
+#     paid = 'Paid'
+#     unpaid = 'Unpaid'
+
+#     PAYMENT_CHOICES = [
+#        (paid, 'Paid'),
+#        (unpaid, 'Unpaid'),
+#    ]
+#     # payment_status = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+#     payment = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default=unpaid)
 
